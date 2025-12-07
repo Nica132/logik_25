@@ -1,0 +1,184 @@
+
+#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <locale.h>
+#include <windows.h>
+#include <limits.h>
+#include <string.h>
+#include <errno.h>
+
+struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+};
+
+struct Node* root = NULL;
+
+struct Node* CreateTree(struct Node* root, struct Node* r, int data)
+{
+    if (r == NULL)
+    {
+        r = (struct Node*)malloc(sizeof(struct Node));
+        if (r == NULL)
+        {
+            printf("Ошибка выделения памяти\n");
+            exit(0);
+        }
+
+        r->left = NULL;
+        r->right = NULL;
+        r->data = data;
+        if (root == NULL) return r;
+
+        if (data > root->data) root->right = r;
+        else root->left = r;
+        return r;
+    }
+
+    if (data > r->data)
+        CreateTree(r, r->right, data);
+    else
+        CreateTree(r, r->left, data);
+
+    return r;
+}
+
+void print_tree(struct Node* r, int l)
+{
+    if (r == NULL) return;
+
+    print_tree(r->right, l + 1);
+    for (int i = 0; i < l; i++) printf("   ");
+    printf("%d\n", r->data);
+    print_tree(r->left, l + 1);
+}
+
+struct Node* searchTree(struct Node* r, int value)
+{
+    if (r == NULL || r->data == value)
+        return r;
+
+    if (value < r->data)
+        return searchTree(r->left, value);
+    else
+        return searchTree(r->right, value);
+}
+
+int countOccurrences(struct Node* r, int value)
+{
+    if (r == NULL) return 0;
+
+    int count = 0;
+    if (r->data == value) count = 1;
+
+    return count + countOccurrences(r->left, value) + countOccurrences(r->right, value);
+}
+
+void freeTree(struct Node* r)
+{
+    if (r == NULL) return;
+
+    freeTree(r->left);
+    freeTree(r->right);
+    free(r);
+}
+
+int main()
+{
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+
+    int D, start = 1;
+    int searchValue;
+    char input[100];
+
+    root = NULL;
+    printf("-1 - окончание построения дерева\n");
+
+    while (start) {
+        printf("Введите число: ");
+
+        if (fgets(input, sizeof(input), stdin) == NULL) {
+            printf("Ошибка ввода! Программа завершена.\n");
+            freeTree(root);
+            getchar();
+            return 0;
+        }
+
+        char* endptr;
+        errno = 0;
+        long num = strtol(input, &endptr, 10);
+        if (endptr == input || *endptr != '\n' && *endptr != '\0') {
+            printf("Ошибка ввода! Введите целое число. Программа завершена.\n");
+            freeTree(root);
+            getchar();
+            return 0;
+        }
+
+        if (errno == ERANGE || num < INT_MIN || num > INT_MAX) {
+            printf("Ошибка ввода! Число должно быть в диапазоне %d до %d. Программа завершена.\n", INT_MIN, INT_MAX);
+            freeTree(root);
+            getchar();
+            return 0;
+        }
+
+        D = (int)num;
+
+        if (D == -1) {
+            printf("Построение дерева окончено\n\n");
+            start = 0;
+        }
+        else {
+            root = CreateTree(root, root, D);
+        }
+    }
+
+    printf("Дерево:\n");
+    print_tree(root, 0);
+    printf("\n");
+
+    printf("Введите число для поиска: ");
+    if (fgets(input, sizeof(input), stdin) == NULL) {
+        printf("Ошибка ввода! Программа завершена.\n");
+        freeTree(root);
+        getchar();
+        return 0;
+    }
+
+    char* endptr;
+    errno = 0;
+    long searchNum = strtol(input, &endptr, 10);
+    if (endptr == input || *endptr != '\n' && *endptr != '\0' || errno == ERANGE || searchNum < INT_MIN || searchNum > INT_MAX) {
+        printf("Ошибка ввода! Программа завершена.\n");
+        freeTree(root);
+        getchar();
+        return 0;
+    }
+    searchValue = (int)searchNum;
+
+    struct Node* found = searchTree(root, searchValue);
+    if (found != NULL)
+        printf("Число %d найдено в дереве.\n", searchValue);
+    else
+        printf("Число %d не найдено в дереве.\n", searchValue);
+
+    printf("Введите число для подсчёта вхождений: ");
+    if (fgets(input, sizeof(input), stdin) == NULL) {
+        printf("Ошибка ввода! Программа завершена.\n");
+        freeTree(root);
+        getchar();
+        return 0;
+    }
+
+    int occurrences = countOccurrences(root, searchValue);
+    printf("Число %d встречается в дереве %d раз(а).\n", searchValue, occurrences);
+
+    freeTree(root);
+
+    printf("Нажмите Enter для выхода...");
+    getchar();
+
+    return 0;
+}
