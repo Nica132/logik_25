@@ -1,0 +1,107 @@
+#include "stdafx.h"
+#include <conio.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <windows.h>
+
+int** create_matrix(int n) {
+    int** matrix = (int**)malloc(n * sizeof(int*));
+    if (matrix == NULL) 
+
+    for (int i = 0; i < n; i++) {
+        matrix[i] = (int*)malloc(n * sizeof(int));
+    }
+    return matrix;
+}
+
+void free_matrix(int** matrix, int n) {
+    for (int i = 0; i < n; i++) {
+        free(matrix[i]);
+    }
+    free(matrix);
+}
+
+void fill_matrix(int** matrix, int n) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            matrix[i][j] = rand() % 2;
+        }
+    }
+	/*for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            printf("%d ",matrix[i][j]);
+        }
+}*/
+
+}
+
+int main(void) {
+    SetConsoleOutputCP(1251);
+    SetConsoleCP(1251);
+    
+    setvbuf(stdin, NULL, _IONBF, 0);
+    setvbuf(stdout, NULL, _IONBF, 0);
+
+	int sizes[] = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 2000, 4000, 10000};
+	//int sizes[] = {500};
+    int num_sizes = sizeof(sizes) / sizeof(sizes[0]);
+
+    srand(time(NULL));
+
+    printf("Измерение времени перемножения матриц\n");
+    printf("=====================================\n\n");
+
+
+    for (int s = 0; s < num_sizes; s++) {
+        int n = sizes[s];
+        printf("Размер матрицы: %d x %d\n", n, n);
+        
+        int** a = create_matrix(n);
+        int** b = create_matrix(n);
+        int** c = create_matrix(n);
+       
+		fill_matrix(a, n);
+        fill_matrix(b, n);
+
+        clock_t start, end;
+        double cpu_time_used;
+
+        start = clock();
+        
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                int elem_c = 0;
+                for (int r = 0; r < n; r++) {
+                    elem_c += a[i][r] * b[r][j];
+                }
+                c[i][j] = elem_c;
+            }
+			 if (n >= 4000 && (i+1) % (n/10) == 0) {
+                printf("Прогресс: %d%%\n", (i+1)*100/n);
+            }
+        }
+        end = clock();
+       cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+
+	    int hours = (int)cpu_time_used / 3600;
+	    int minutes = ((int)cpu_time_used % 3600) / 60;
+	    double seconds = cpu_time_used - hours * 3600 - minutes * 60;
+
+
+	    printf("Время перемножения: ");
+	    if (hours > 0) printf("%d ч ", hours);
+	    if (minutes > 0 || hours > 0) printf("%d мин ", minutes);
+	    printf("%.2f сек\n", seconds);
+
+
+        free_matrix(a, n);
+        free_matrix(b, n);
+        free_matrix(c, n);
+        
+        printf("-----------------------------\n");
+        
+    }
+    _getch();
+    return 0;
+}
